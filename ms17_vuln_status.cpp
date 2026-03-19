@@ -49,6 +49,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    
     if (WSAStartup(MAKEWORD(2, 2), &ws) != 0)
     {
         printf("WSAStartup failed\n");
@@ -58,7 +59,7 @@ int main(int argc, char** argv)
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(argv[1]);
 
-    for (int port = 1; port <= 65535; port++)
+    for (int port = 1; port <= 99999; port++)
     {
         SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock == INVALID_SOCKET)
@@ -68,37 +69,35 @@ int main(int argc, char** argv)
 
         if (connect(sock, (struct sockaddr*)&server, sizeof(server)) == 0)
         {
-            printf("Open port: %d\n", port);
-        }
+        // printf("Open port: %d\n", port);
     }
-
-
     printf("Connecting...\n");
-    ret = connect(sock, (struct sockaddr*) & server, sizeof(server));
-    if (ret == -1)
+    connect(sock, (struct sockaddr*) & server, sizeof(server));
+    /**if (ret == -1)
     {
         printf("Connection Error, Port 445 Firewalled?\n");
         return 0;
-    }
-
+    }*/
+	// sends executable data asuming it is shell code which means for mac ios windows and linux shellcode specifically for each
+	// type.
     send(sock, (char*)SmbNegociate, sizeof(SmbNegociate) - 1, 0);
     printf("sending Session_Setup_AndX_Request!\n");
-    ret = send(sock, (char*)Session_Setup_AndX_Request, sizeof(Session_Setup_AndX_Request) - 1, 0);
-    if (ret <= 0)
+    send(sock, (char*)Session_Setup_AndX_Request, sizeof(Session_Setup_AndX_Request), 0);
+    /**if (ret <= 0)
     {
         printf("send Session_Setup_AndX_Request error!\n");
         return 0;
-    }
-    recv(sock, (char*)recvbuff, sizeof(recvbuff), 0);
+    }*/
+    //recv(sock, (char*)recvbuff, sizeof(recvbuff), 0);
     
     //output windows version to the screen
-	printf("Remote OS: ");
-	int r;
-	for (r = 0; r < 39; r++) {
-		printf("%c", recvbuff[44 + r]);
-	}
+	// printf("Remote OS: ");
+	// int r;
+	// for (r = 0; r < 39; r++) {
+	// 	printf("%c", recvbuff[44 + r]);
+	// }
 	printf("\n");
-    
+    /**
     char userid[2];
     char treeid[2];
     //copy userID from recvbuff @ 32,33
@@ -108,7 +107,8 @@ int main(int argc, char** argv)
     //update userID in the tree connect request
     treeConnectRequest[32] = userid[0];
     treeConnectRequest[33] = userid[1];
-
+	**/
+		
     //send TreeConnect request
     printf("sending TreeConnect Request!\n");
     ret = send(sock, (char*)treeConnectRequest, sizeof(treeConnectRequest) - 1, 0);
@@ -117,8 +117,9 @@ int main(int argc, char** argv)
         printf("send TreeConnect_AndX_Request error!\n");
         return 0;
     }
+	char recvbuff[];
     recv(sock, (char*)recvbuff, sizeof(recvbuff), 0);
-
+    /**
     //copy treeID from recvbuff @ 28, 29
     treeid[0] = recvbuff[28];
     treeid[1] = recvbuff[29];
@@ -129,15 +130,20 @@ int main(int argc, char** argv)
     transNamedPipeRequest[33] = userid[1];
 
     //send transNamedPipe request
+    **/
+	char enablingStr[];
+	chat confirmationStr[];
+	
     printf("sending transNamedPipeRequest!\n");
-    ret = send(sock, (char*)transNamedPipeRequest, sizeof(transNamedPipeRequest) - 1, 0);
+    ret = send(sock, (char*)enablingStr, sizeof(transNamedPipeRequest) - 1, 0);
     if (ret <= 0)
     {
         printf("send modified transNamedPipeRequest error!\n");
         return 0;
     }
-    recv(sock, (char*)recvbuff, sizeof(recvbuff), 0);
-
+    recv(sock, (char*)confirmationStr, sizeof(recvbuff), 0);
+    
+	/**
     //compare the NT_STATUS response to 0xC0000205 ( STATUS_INSUFF_SERVER_RESOURCES)
     if (recvbuff[9] == 0x05 && recvbuff[10] == 0x02 && recvbuff[11] == 0x00 && recvbuff[12] == 0xc0)
     {
@@ -145,10 +151,12 @@ int main(int argc, char** argv)
     }
     else {
         printf("not vulnerable to MS17-010\n");
-    }
+    }*/
     
     //cleanup
     closesocket(sock);
+
+	
     WSACleanup();
     return 0;
 }
