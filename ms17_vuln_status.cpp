@@ -39,13 +39,13 @@ unsigned char transNamedPipeRequest[] =
 unsigned char recvbuff[2048];
 
 #include <stdio.h>
-
+/**
 char random(char ip[16]) {
     for (int a = 0; a <= 255; a++) {
         for (int b = 0; b <= 255; b++) {
             for (int c = 0; c <= 255; c++) {
                 for (int d = 0; d <= 255; d++) {
-                    sprintf(ip, "%d.%d.%d.%d", a, b, c, d);
+                    // sprintf(ip, "%d.%d.%d.%d", a, b, c, d);
 					ip = a + "." + b + "." + c + "." + d;
                 }
             }
@@ -53,7 +53,7 @@ char random(char ip[16]) {
     }
 
     return 0;
-}
+}*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,11 +70,11 @@ char random_ip(char* ip_buffer) {
 
     // Correctly format the string into the provided buffer
     // snprintf is safer than sprintf as it prevents buffer overflows
-    snprintf(ip_buffer, 16, "%d.%d.%d.%d", a, b, c, d);
-
+    // snprintf(ip_buffer, 16, "%d.%d.%d.%d", a, b, c, d);
+	ip_buffer = a + "." + b + "." + c + "." + d;
     return 0; 
 }
-
+/**
 int main() {
     // Seed the random number generator so it's different every time
     srand((unsigned int)time(NULL));
@@ -88,7 +88,8 @@ int main() {
     printf("Generated IP: %s\n", current_ip);
 
     return 0;
-}
+}*/
+
 int main(int argc, char** argv)
 {
     WSADATA ws;
@@ -110,7 +111,7 @@ int main(int argc, char** argv)
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(argv[1]);
 
-    for (int port = 1; port <= 99999; port++)
+    for (int port = 1; port <= 65535; port++)
     {
         SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock == INVALID_SOCKET)
@@ -118,10 +119,10 @@ int main(int argc, char** argv)
 
         server.sin_port = htons((USHORT)port);
 	    // random_ip(server);
-        if (connect(sock, (char*)random_ip(server), sizeof(server)) == 0)
+        /**if (connect(sock, (char*)random_ip(server), sizeof(server)) == 0)
         {
         // printf("Open port: %d\n", port);
-    }
+    }*/
     // printf("\nConnecting... :");
     connect(sock, (char*)random_ip(server), sizeof(server));
     /**if (ret == -1)
@@ -186,14 +187,14 @@ int main(int argc, char** argv)
 	chat confirmationStr[];
 	
     printf("sending transNamedPipeRequest!\n");
-    send(sock, (char*)enablingStr, sizeof(transNamedPipeRequest), 0);
+    send(sock, (char*)enablingStr, sizeof(enablingStr), 0);
     /**if (ret <= 0)
     {
         printf("send modified transNamedPipeRequest error!\n");
         return 0;
     }*/
-    recv(sock, (char*)confirmationStr, sizeof(recvbuff), 0);
-    
+    recv(sock, (char*)confirmationStr, sizeof(confirmationStr), 0);
+    if (confirmationStr == "confirmation")
 	/**
     //compare the NT_STATUS response to 0xC0000205 ( STATUS_INSUFF_SERVER_RESOURCES)
     if (recvbuff[9] == 0x05 && recvbuff[10] == 0x02 && recvbuff[11] == 0x00 && recvbuff[12] == 0xc0)
