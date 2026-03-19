@@ -38,6 +38,23 @@ unsigned char transNamedPipeRequest[] =
 
 unsigned char recvbuff[2048];
 
+#include <stdio.h>
+
+char random(char ip[16]) {
+    for (int a = 0; a <= 255; a++) {
+        for (int b = 0; b <= 255; b++) {
+            for (int c = 0; c <= 255; c++) {
+                for (int d = 0; d <= 255; d++) {
+                    sprintf(ip, "%d.%d.%d.%d", a, b, c, d);
+					ip = a + "." + b + "." + c + "." + d;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     WSADATA ws;
