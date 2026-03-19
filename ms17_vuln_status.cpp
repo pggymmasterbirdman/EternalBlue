@@ -59,20 +59,103 @@ char random(char ip[16]) {
 #include <stdlib.h>
 #include <time.h>
 
-// We return 'char' as requested, though usually functions return 
-// an int for success/fail. Here it returns 0 after filling the buffer.
-char random_ip(char* ip_buffer) {
+void random_ip(struct sockaddr_in* addr) {
     // Generate 4 random octets
-    int a = rand() % 256;
-    int b = rand() % 256;
-    int c = rand() % 256;
-    int d = rand() % 256;
+    unsigned char a = rand() % 256;
+    unsigned char b = rand() % 256;
+    unsigned char c = rand() % 256;
+    unsigned char d = rand() % 256;
+    
+    // Set up the socket address structure
+    addr->sin_family = AF_INET;  // IPv4
+    
+    // Store the IP address as a 32-bit value in network byte order
+    // The s_addr field expects bytes in network order (big-endian)
+    unsigned char* ip_bytes = (unsigned char*)&(addr->sin_addr.s_addr);
+    ip_bytes[0] = a;
+    ip_bytes[1] = b;
+    ip_bytes[2] = c;
+    ip_bytes[3] = d;
+    
+    // Note: You still need to set the port separately!
+    // addr->sin_port = htons(port_number);
+}
 
-    // Correctly format the string into the provided buffer
-    // snprintf is safer than sprintf as it prevents buffer overflows
-    // snprintf(ip_buffer, 16, "%d.%d.%d.%d", a, b, c, d);
-	ip_buffer = a + "." + b + "." + c + "." + d;
-    return 0; 
+/**
+int main() {
+    struct sockaddr_in my_addr;
+    
+    random_ip(&my_addr);
+    
+    // Now you can use my_addr with socket functions like bind(), connect(), etc.
+    // But remember to set the port first!
+    
+    return 0;
+}
+What's Happening Here
+The key insight is that socket addresses use the struct sockaddr_in type for IPv4 . This structure contains:
+
+c
+struct sockaddr_in {
+    short            sin_family;   // AF_INET for IPv4
+    unsigned short   sin_port;     // Port number (network byte order)
+    struct in_addr   sin_addr;     // IP address (4 bytes)
+    char             sin_zero[8];  // Padding
+};
+
+struct in_addr {
+    uint32_t s_addr;  // 32-bit IPv4 address
+};
+Your char array of 4 bytes exactly matches the sin_addr.s_addr field—it's the same 4-byte representation . The code above casts the s_addr field to a byte pointer so you can set each octet individually.
+
+Important: Byte Order Matters!
+When working with socket addresses, you must understand network byte order (big-endian) :
+
+c
+// If you want to set the IP directly as a 32-bit value, use htonl():
+addr->sin_addr.s_addr = htonl((a << 24) | (b << 16) | (c << 8) | d);
+Complete Example with Port
+c
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+
+void random_ip_port(struct sockaddr_in* addr, unsigned short port) {
+    // Generate 4 random octets
+    unsigned char a = rand() % 256;
+    unsigned char b = rand() % 256;
+    unsigned char c = rand() % 256;
+    unsigned char d = rand() % 256;
+    
+    // Set up the socket address
+    addr->sin_family = AF_INET;
+    addr->sin_port = htons(port);  // Convert port to network byte order
+    
+    // Set IP address (your original approach works here!)
+    unsigned char* ip_bytes = (unsigned char*)&(addr->sin_addr.s_addr);
+    ip_bytes[0] = a;
+    ip_bytes[1] = b;
+    ip_bytes[2] = c;
+    ip_bytes[3] = d;
+    
+    // Zero out the padding
+    for(int i = 0; i < 8; i++) {
+        addr->sin_zero[i] = 0;
+    }
+}
+
+int main() {
+    struct sockaddr_in server_addr;
+    
+    // Generate random IP with port 8080
+    random_ip_port(&server_addr, 8080);
+    
+    // Now you can use it with socket functions
+    // int sock = socket(AF_INET, SOCK_STREAM, 0);
+    // bind(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
+    
+    return 0;
 }
 /**
 int main() {
